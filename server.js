@@ -1,7 +1,3 @@
-// consts
-const API_KEY = "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";
-const PORT = 3000;
-
 // imports
 const express = require("express");
 const cors = require("cors");
@@ -9,33 +5,42 @@ const mongoose = require("mongoose");
 const userModel = require("./schemas/user.js");
 const session = require("express-session");
 const OpenAI = require("openai");
+const path = require("path");
+require("dotenv").config();
 
 // init
 const app = express();
 const openai = new OpenAI({
-  apiKey: API_KEY,
+  apiKey: process.env.API_KEY,
 });
-mongoose.connect("mongodb://127.0.0.1/anotherstory").then(() => {
+mongoose.connect(process.env.DB_URI).then(() => {
   console.log("db connected");
 }).catch((error) => {
   console.log("something went wrong");
   console.log(error);
 });
-app.listen(PORT, () => console.log("app listening on port " + PORT + "..."));
+app.listen(process.env.PORT, () => console.log("app listening on port " + process.env.PORT + "..."));
 
 // routes
-app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ["POST"],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: "http://localhost:5173",
+//   methods: ["POST"],
+//   credentials: true
+// }));
 app.use(express.json());
 app.use(session({
   secret: "8943NUISNDUO3#",
   saveUninitialized: false,
 }));
+app.use(express.static("public"));
 
-app.get("/key", (req, res) => {
+app.get("*", (req, res) => {
+  res.sendFile("index.html", {
+    root: path.join(__dirname, "./public")
+  });
+});
+
+app.post("/key", (req, res) => {
   let key = createNewUser();
   res.send({ Key: key });
 });
